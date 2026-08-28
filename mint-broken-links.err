@@ -1,3 +1,0 @@
-npm warn install-scripts .npmrc allow-scripts setting is being ignored because --allow-scripts was passed on the command line
-npm notice run npx
-npm notice run mint broken-links
