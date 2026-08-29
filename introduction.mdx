@@ -1,32 +1,31 @@
 ---
 title: Introduction
-description: Validated current-state documentation for IAG — Identity & Access Governance
+description: IAG — self-hosted identity and access governance: ingestion, certification campaigns, SoD, enforcement, and a tamper-evident audit trail.
 ---
 
 # IAG Docs
 
-This site publishes **validated current-state documentation** for IAG
-(Identity & Access Governance): a self-hosted platform for identity
-ingestion, certification campaigns, segregation-of-duties detection,
-remediation/enforcement, SCIM provisioning, risk scoring, and a
-tamper-evident audit trail.
+IAG (Identity & Access Governance) is a self-hosted platform that ingests
+identities and their access from your directories, normalizes them into an
+entitlement catalog, and runs certification campaigns over them — with every
+decision recorded in a tamper-evident, hash-chained audit trail that stays
+on your infrastructure.
 
-## How this documentation stays current
+## What you'll find here
 
-Every page marked **[V]** was produced by the `docs-refresh` pipeline:
+- **[IAG Administrator Guide](/iag-admin)** — the complete, screenshot-rich
+  walkthrough of every admin view: identity ingestion, entitlement catalogs,
+  certification campaigns, segregation of duties, remediation and enforcement
+  write-back, SCIM provisioning, risk scoring, user administration, and the
+  audit chain — plus connector setup, runbooks, and troubleshooting.
 
-1. The isolated stack is brought up and verified (the production stack is
-   never touched).
-2. Real UI screenshots are captured via Playwright with an audit manifest
-   (blank/duplicate frames fail the run).
-3. Live evidence (health, dashboard counters, audit-chain verification) is
-   collected from the running system.
-4. Pages are updated **only** with numbers a tool produced that run.
-5. Changes land in git; Mintlify publishes them (PR previews on every
-   change, deploy on merge).
+## About the evidence in these docs
 
-## Start here
+Every screenshot in this documentation is captured from a running build of
+IAG by an automated pipeline, and pages are validated before they publish.
+What you see here reflects the product as it actually is.
 
-- [IAG Administrator Guide](/iag-admin) — the validated, screenshot-rich
-  current-state guide (architecture, every admin view, roles, connectors,
-  SCIM/enforcement, runbook, troubleshooting, evidence appendix).
+## Elsewhere
+
+- **[iam-simplified.com](https://iam-simplified.com)** — what IAG is, how it
+  works, and how to get a stack running in minutes.
