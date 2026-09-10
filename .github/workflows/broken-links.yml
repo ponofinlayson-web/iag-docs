@@ -1,0 +1,22 @@
+name: Broken links
+
+on:
+  schedule:
+    # Sundays 18:00 UTC — off-peak for a docs site
+    - cron: "0 18 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Scan for broken links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Run broken-link check
+        run: npx --yes mintlify@latest broken-links

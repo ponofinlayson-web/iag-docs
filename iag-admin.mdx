@@ -5,8 +5,7 @@ date: 2026-08-28
 generated-by: docs-forge (from docs/admin-guide.md - do not edit)
 ---
 
-
-> **About this document.** This guide documents the *current state* of IAG as
+> **About this document.** This guide documents the _current state_ of IAG as
 > actually verified — not as designed. Every screenshot is a real capture from
 > the running application, and every claim marked **[V]** was validated live in
 > the session dated 2026-08-26. The validation evidence is summarized in
@@ -75,20 +74,20 @@ Browser -> nginx (LB; no DB creds, no writes)
          -> iag-migrate (one-shot Alembic at boot; the only schema authority)
 ```
 
-| Layer | Choice | Why |
-|---|---|---|
-| API | FastAPI (Python 3.12), Pydantic v2 | contract-first schemas |
-| ORM / migrations | SQLAlchemy 2.x typed / Alembic | relational integrity, single schema authority |
-| DB | PostgreSQL 16 | one writer of truth |
-| Frontend | React 18 + TypeScript + Vite | typed contract mirroring Pydantic |
-| Proxy | nginx | stateless LB across 3 replicas |
-| Tests | pytest + httpx (SQLite) | no Docker needed for the suite |
+| Layer            | Choice                             | Why                                           |
+| ---------------- | ---------------------------------- | --------------------------------------------- |
+| API              | FastAPI (Python 3.12), Pydantic v2 | contract-first schemas                        |
+| ORM / migrations | SQLAlchemy 2.x typed / Alembic     | relational integrity, single schema authority |
+| DB               | PostgreSQL 16                      | one writer of truth                           |
+| Frontend         | React 18 + TypeScript + Vite       | typed contract mirroring Pydantic             |
+| Proxy            | nginx                              | stateless LB across 3 replicas                |
+| Tests            | pytest + httpx (SQLite)            | no Docker needed for the suite                |
 
 **The resilience contract [V]:** Postgres is the only durable state; replicas
 are stateless (signed JWT sessions — any replica validates any session); only
 the migrate container touches schema; if all replicas are down, nginx returns
 502 and nothing writes; the audit chain is append-only and hash-chained; and
-fault tolerance is *tested, not assumed* — `scripts/smoke.sh` kills a replica
+fault tolerance is _tested, not assumed_ — `scripts/smoke.sh` kills a replica
 mid-service and expects continued service plus a still-valid chain. This was
 re-verified live (see Appendix A).
 
@@ -276,13 +275,13 @@ persists. Both were walked live **[V]**.
 
 ## 5. Roles and permissions
 
-| Role | Can do |
-|---|---|
-| system_admin | Everything: users, settings, sources, campaigns, audit |
+| Role                | Can do                                                   |
+| ------------------- | -------------------------------------------------------- |
+| system_admin        | Everything: users, settings, sources, campaigns, audit   |
 | certification_admin | Identities, sources, entitlements, campaigns; view audit |
-| reviewer | Assigned reviews, decisions, own profile |
-| auditor | Read-only: campaigns, reviews, audit logs, reports |
-| report_viewer | Read-only dashboards and campaign reports |
+| reviewer            | Assigned reviews, decisions, own profile                 |
+| auditor             | Read-only: campaigns, reviews, audit logs, reports       |
+| report_viewer       | Read-only dashboards and campaign reports                |
 
 Sessions are signed stateless JWTs (httpOnly cookie); API keys present a
 Bearer principal with the same role chokes.
@@ -306,8 +305,8 @@ Sync workers run inside app replicas (never a separate writer) on
 
 ## 7. SCIM provisioning and enforcement
 
-*(Condensed from the original SCIM guide — see git history for the long form
-and `SPECS/feature-6-scim-provisioning-enforcement.md` for design.)*
+_(Condensed from the original SCIM guide — see git history for the long form
+and `SPECS/feature-6-scim-provisioning-enforcement.md` for design.)_
 
 **Provisioning** — off until enabled + token generated (endpoints answer 503
 until then; audits record nothing). Point your IdP at
@@ -354,11 +353,15 @@ restarts and waits for healthy. For an isolated (renamed) stack use
 # compose.test.yaml (in the clone)
 name: iag-test
 services:
-  iag-db:      { container_name: iag-test-db }
+  iag-db: { container_name: iag-test-db }
   iag-migrate: { container_name: iag-test-migrate }
-  iag-app-1:   { container_name: iag-test-app-1, environment: { IAG_APP_BASE_URL: http://localhost:8091 } }
+  iag-app-1:
+    {
+      container_name: iag-test-app-1,
+      environment: { IAG_APP_BASE_URL: http://localhost:8091 },
+    }
   # ... app-2, app-3, glauth, openldap similarly ...
-  iag-nginx:   { container_name: iag-test-nginx, ports: !override ["8091:80"] }
+  iag-nginx: { container_name: iag-test-nginx, ports: !override ["8091:80"] }
 ```
 
 ```bash
@@ -398,13 +401,13 @@ docker compose down -v     # removes containers AND volumes (fresh DB, fresh boo
 
 **All replicas crash-loop at boot: `IAG_SMTP_HOST set but missing:
 IAG_SMTP_USER, IAG_SMTP_PASSWORD`** — fail-fast settings validation. Setting
-*any* SMTP host requires user+password, even for a local sink that offers no
+_any_ SMTP host requires user+password, even for a local sink that offers no
 AUTH. Set both (dummy values are fine for a no-AUTH sink) and recreate.
 Consider upstream: warn instead of crash, or document on the knob. **[V]**
 
 **Compose from a clone touched the wrong stack** — the compose file pins
 project name `iag`, container names, and port 8090. Without the overlay
-(§8.4), `docker compose up` in a clone adopts the *live* project. Always use
+(§8.4), `docker compose up` in a clone adopts the _live_ project. Always use
 `-f compose.yaml -f compose.test.yaml` in clones.
 
 **`bash scripts/...` behaves oddly / env vars missing on Windows** — the
@@ -443,18 +446,18 @@ Environment: isolated clone `D:\iag-test` (branch `validation/test-isolation`,
 commit `c398464` + this guide), stack `iag-test` on port 8091, original
 production stack untouched throughout.
 
-| Check | Result |
-|---|---|
-| Backend suite (pytest, SQLite) | **290/290 passed** |
-| Stack boot | migrate → bootstrap → 3×app healthy → nginx 8091 |
-| Live proofs | **13/13 PASS** (11/13 in single-battery order; `report`+`remediation` pass solo on fresh volumes — ordering documented §8.5) |
-| Fault-tolerance smoke | **PASS** — replica killed, nginx served, chain valid, replica rejoined |
-| UI walkthrough (real browser) | login + all 13 views + campaign detail/report + dark theme — all render with live data |
-| Audit chain | `{"valid":true,"entries":177,"head":"3310dd78…"}` |
-| Health | `{"status":"ok","service":"iag-api","version":"0.3.0"}` |
-| Dashboard counters | 10 identities · 24 accounts · 11 unlinked · 11 privileged · 8 active campaigns · 31 pending reviews |
-| Campaigns | 10 total: 8 active, 1 completed, 1 cancelled |
-| API keys / users | 3 keys (audit-evidence rows retained by design) / 1 user |
+| Check                          | Result                                                                                                                       |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Backend suite (pytest, SQLite) | **290/290 passed**                                                                                                           |
+| Stack boot                     | migrate → bootstrap → 3×app healthy → nginx 8091                                                                             |
+| Live proofs                    | **13/13 PASS** (11/13 in single-battery order; `report`+`remediation` pass solo on fresh volumes — ordering documented §8.5) |
+| Fault-tolerance smoke          | **PASS** — replica killed, nginx served, chain valid, replica rejoined                                                       |
+| UI walkthrough (real browser)  | login + all 13 views + campaign detail/report + dark theme — all render with live data                                       |
+| Audit chain                    | `{"valid":true,"entries":177,"head":"3310dd78…"}`                                                                            |
+| Health                         | `{"status":"ok","service":"iag-api","version":"0.3.0"}`                                                                      |
+| Dashboard counters             | 10 identities · 24 accounts · 11 unlinked · 11 privileged · 8 active campaigns · 31 pending reviews                          |
+| Campaigns                      | 10 total: 8 active, 1 completed, 1 cancelled                                                                                 |
+| API keys / users               | 3 keys (audit-evidence rows retained by design) / 1 user                                                                     |
 
 Fixes contributed during validation (cherry-pickable): env-overridable
 container names in six live scripts; `live_remediation_check` contract fix +
